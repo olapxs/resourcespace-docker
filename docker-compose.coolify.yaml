@@ -4,7 +4,10 @@ services:
     restart: unless-stopped
     cpus: 12
     command: >
-      bash -c "touch /rsconfig/config.php &&
+      bash -c "for d in /etc/php/*/apache2/conf.d; do
+      printf 'upload_max_filesize = 4G\npost_max_size = 4G\n' > $$d/99-uploads.ini;
+      done &&
+      touch /rsconfig/config.php &&
       chown www-data:www-data /rsconfig/config.php &&
       ln -sf /rsconfig/config.php /var/www/html/include/config.php &&
       exec /entrypoint.sh"
