@@ -1,0 +1,36 @@
+services:
+  resourcespace:
+    build: .
+    restart: unless-stopped
+    cpus: 12
+    command: >
+      bash -c "touch /rsconfig/config.php &&
+      chown www-data:www-data /rsconfig/config.php &&
+      ln -sf /rsconfig/config.php /var/www/html/include/config.php &&
+      exec /entrypoint.sh"
+    depends_on:
+      - mariadb
+    volumes:
+      - rs-config:/rsconfig
+      - rs-filestore:/var/www/html/filestore
+      - type: bind
+        source: /mnt/wasabi/resourcespace
+        target: /var/www/html/filestore/original
+        bind:
+          propagation: rslave
+
+  mariadb:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      - MARIADB_DATABASE=resourcespace
+      - MARIADB_USER=resourcespace
+      - MARIADB_PASSWORD=${DB_PASSWORD}
+      - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+    volumes:
+      - rs-mariadb:/var/lib/mysql
+
+volumes:
+  rs-config:
+  rs-filestore:
+  rs-mariadb:
